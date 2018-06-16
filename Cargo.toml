@@ -1,0 +1,9 @@
+# [[file:~/Workspace/Programming/structure-predication/spdkit/spdkit.note::ffc75e20-e24a-42b9-8bc6-0ae6be1c3b1f][ffc75e20-e24a-42b9-8bc6-0ae6be1c3b1f]]
+[package]
+name = "spdk"
+version = "0.0.1"
+authors = ["Wenping Guo <ybyygu@gmail.com>"]
+
+[dependencies]
+gchemol = { git = "https://github.com/ybyygu/gchemol.git" }
+# ffc75e20-e24a-42b9-8bc6-0ae6be1c3b1f ends here
