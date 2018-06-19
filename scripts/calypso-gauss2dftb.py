@@ -2,6 +2,7 @@
 import ase
 import ase.io
 import numpy as np
+from ase.units import Hartree, eV
 
 # read atoms from calypso generated file
 def get_atoms(filename="g.xyz"):
@@ -42,7 +43,7 @@ def write_gsoutput(atoms, outfile="gsoutput"):
     energy = atoms.get_total_energy()
     # convert to kcal/mol
     print("ase energy = {} eV".format(energy))
-    energy = energy/23.06035
+    energy = energy*eV/Hartree
 
     lines = []
     lines.append(" SCF Done:  E(UPBEPBE) = {:20.9f}      A.U. after 0 cycles".format(energy))
@@ -51,6 +52,9 @@ def write_gsoutput(atoms, outfile="gsoutput"):
     lines.append(" Center     Atomic      Atomic             Coordinates (Angstroms)    ")
     lines.append(" Number     Number       Type             X           Y           Z   ")
     lines.append(" ---------------------------------------------------------------------")
+
+    # read optimized geometry
+    atoms = ase.io.read("geo_end.gen")
 
     i = 1
     for a in atoms:
