@@ -3,57 +3,140 @@ extern crate gchemol;
 #[macro_use] extern crate quicli;
 
 use quicli::prelude::*;
-use gchemol::formats::vasp::PoscarFile;
+use gchemol::{
+    Molecule,
+    formats::vasp::PoscarFile,
+};
 
 #[derive(Debug, StructOpt)]
 struct Cli {
     // Add a positional argument that the user has to supply:
-    /// The file to read
-    file: String,
+    /// CALYPSO generated result file, e.g. pso_opt_10
+    inpfile: String,
+    /// The output file name, e.g. /tmp/pso_opt.mol2
+    outfile: String,
     // Quick and easy logging setup you get for free with quicli
     #[structopt(flatten)]
     verbose: Verbosity,
 }
 
 main!(|args: Cli, log_level: verbose| {
-    info!("reading from: {}", &args.file);
-    let txt =  read_file(&args.file)?;
+    info!("reading from: {}", &args.inpfile);
+    let ipath = Path::new(&args.inpfile);
+    let opath = Path::new(&args.outfile);
+    let stream = format_pso_opt_file(ipath)?;
+    write_to_file("/tmp/poscar", &stream)?;
+
+    let mut mols = io::read("/tmp/poscar")?;
+    for mol in &mut mols {
+        mol.rebond();
+    }
+
+    io::write(&args.outfile, &mols)?;
+    info!("wrote to: {}", &args.outfile);
 });
 // 01d31ed5-faf3-4dc3-8193-149a359ae48e ends here
 
 // [[file:~/Workspace/Programming/structure-predication/spdkit/spdkit.note::c2b8efc4-fcdb-4c4c-96f2-e5a46a9224c7][c2b8efc4-fcdb-4c4c-96f2-e5a46a9224c7]]
 use std::path::{Path, PathBuf};
+use std::collections::HashMap;
+use gchemol::io;
+
+struct Data {
+    name_of_atom: String,
+    number_of_atom: usize
+}
 
 /// read element symbols from input.dat in the parent directory of pso_opt_* file
-fn get_symbols_from_pso_input(pso_result_file: &Path) -> Result<Vec<String>> {
+fn get_symbols_from_pso_input(pso_result_file: &Path) -> Result<HashMap<String, Vec<String>>> {
     let parent = pso_result_file.parent().ok_or(format_err!("wrong path"))?;
     let input_dat = parent.join("../input.dat");
 
+    info!("read CALYPSO input from: {:?}", input_dat.display());
     let txt = read_file(input_dat)?;
-    let mut line = txt
+    let lines: Vec<_> = txt
         .lines()
-        .filter(|line| line.starts_with("NameOfAtoms"))
-        .take(1);
+        .filter(|line| line.starts_with("NameOfAtoms") || line.starts_with("NumberOfAtoms"))
+        .take(2)
+        .collect();
 
-    if let Some(line) = line.next() {
-        let syms: Vec<_> = line.split('=')
-            .last()
-            .ok_or(format_err!("xx"))?
-            .trim()
-            .split(' ')
-            .map(|s| s.into())
-            .collect();
-        return Ok(syms)
-
-    } else {
-        bail!("cannot found NameOfAtoms in input.dat");
+    assert_eq!(2, lines.len());
+    let mut d = HashMap::new();
+    for line in lines {
+        let parts: Vec<_> = line.split_whitespace().collect();
+        let k = &parts[0];
+        let v: Vec<_> = parts[2..].iter().map(|v|v.to_string()).collect();
+        d.insert(k.to_string(), v);
     }
+
+    Ok(d)
 }
 
-#[test]
-fn test_pso_input() {
-    let p = Path::new("/home/ybyygu/Incoming/research/星辰表面搜索/calypso-dftb/test2/pso_opt_50");
-    let x = get_symbols_from_pso_input(p).expect("pso input");
-    println!("{:#?}", x);
+/// format calypso result into standard POSCAR file
+fn format_pso_opt_file<P: AsRef<Path>>(path: P) -> Result<String> {
+    let path = path.as_ref();
+
+    // test if the result file format
+    // pso_ini_* contains initial structures
+    // pso_opt_* contains optimized structures with final energies
+    let filename = path
+        .file_name()
+        .and_then(|v| v.to_str())
+        .ok_or(format_err!("not a normal file"))?;
+    let is_ini_file = filename.contains("_ini_");
+
+    if is_ini_file {
+        info!("read initial structures from {:?}", path.display());
+    } else {
+        info!("reading optimized structures from {:?}", path.display());
+    }
+
+    let d = get_symbols_from_pso_input(path)?;
+    let numbers = &d["NumberOfAtoms"];
+    let names = &d["NameOfAtoms"];
+
+    // total number of atoms
+    let natoms: usize = numbers
+        .iter()
+        .map(|v| v.parse::<usize>().expect("number of atoms"))
+        .sum();
+
+    // total number of line for one molecule
+    let ntotal = if is_ini_file {
+        7 + natoms
+    } else {
+        8 + natoms
+    };
+
+    let txt = read_file(path)?;
+    let mut all_lines = txt.lines();
+
+    let mut parts = vec![];
+    'out: loop {
+        let mut lines = vec![];
+        for _ in 0..ntotal {
+            if let Some(line) = all_lines.next() {
+                lines.push(line.trim_left().to_owned());
+            } else {
+                break 'out;
+            }
+        }
+        if lines.len() != ntotal {
+            break 'out;
+        }
+        // use energy as the title
+        let syms = names.join(" ").to_string();
+        if is_ini_file {
+            lines.insert(5, syms);
+        } else {
+            lines.remove(1);
+            lines.insert(5, syms);
+        }
+
+        let stream = lines.join("\n");
+        parts.push(stream);
+    }
+
+    Ok(parts.join("\n"))
 }
 // c2b8efc4-fcdb-4c4c-96f2-e5a46a9224c7 ends here
