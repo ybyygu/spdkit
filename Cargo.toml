@@ -6,4 +6,5 @@ authors = ["Wenping Guo <ybyygu@gmail.com>"]
 
 [dependencies]
 gchemol = { git = "https://github.com/ybyygu/gchemol.git" }
+quicli = "0.3"
 # ffc75e20-e24a-42b9-8bc6-0ae6be1c3b1f ends here
