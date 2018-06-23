@@ -1,0 +1,18 @@
+# [[file:~/Workspace/Programming/structure-predication/spdkit/spdkit.note::d1ee744e-e862-4031-b50d-ae8b7d7abf30][d1ee744e-e862-4031-b50d-ae8b7d7abf30]]
+[package]
+name = "magcalc"
+version = "0.0.1"
+authors = ["Wenping Guo <ybyygu@gmail.com>"]
+
+[dependencies]
+#gchemol = { git = "https://github.com/ybyygu/gchemol.git" }
+quicli = "0.3"
+#genevo = { path = "../../../genevo" }
+genevo = { git = "https://github.com/ybyygu/genevo.git" }
+rand = "*"
+csv = "*"
+serde = "*"
+serde_derive = "*"
+fixedbitset = "*"
+lazy_static = "*"
+# d1ee744e-e862-4031-b50d-ae8b7d7abf30 ends here
