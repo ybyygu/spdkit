@@ -8,7 +8,7 @@
 //        AUTHOR:  Wenping Guo <ybyygu@gmail.com>
 //       LICENCE:  GPL version 2 or upper
 //       CREATED:  <2018-06-14 Thu 20:52>
-//       UPDATED:  <2018-06-21 Thu 16:52>
+//       UPDATED:  <2018-07-04 Wed 19:28>
 //===============================================================================#
 // bdab2ff7-59d6-4b5e-8b47-53eaccf5e64d ends here
 
@@ -68,7 +68,7 @@ fn cut_molecule_by_rand_plane(mol: &Molecule) ->
     )
 }
 
-fn plane_cut_and_splice(mol1: &Molecule, mol2: &Molecule) -> Result<Molecule> {
+pub fn plane_cut_and_splice(mol1: &Molecule, mol2: &Molecule) -> Result<Molecule> {
     let natoms = mol1.natoms();
     // sanity check
     if mol2.natoms() == natoms {
@@ -84,15 +84,15 @@ fn plane_cut_and_splice(mol1: &Molecule, mol2: &Molecule) -> Result<Molecule> {
     // record element symbols
     let symbols = mol1.symbols();
     let reduced_symbols = mol1.reduced_symbols();
-    let maxloop = 500;
+    let maxloop = 50000;
     let mut iloop = 0;
 
     let mut omol = mol1.clone();
     loop {
         let (above1, below1, rotated1) = cut_molecule_by_rand_plane(&mol1);
         let (above2, below2, rotated2) = cut_molecule_by_rand_plane(&mol2);
-        println!("above1 {:?}", above1);
-        println!("below2 {:?}", below2);
+        debug!("above1 {:?}", above1);
+        debug!("below2 {:?}", below2);
         // check if number of atoms is correct
         if above1.len() + below2.len() == natoms {
             // check if element types is correct

@@ -39,7 +39,7 @@ fn test_read_data() {
 // [[file:~/Workspace/Programming/structure-predication/spdkit/spdkit.note::65413bca-085a-4f26-8718-0241c853f9dd][65413bca-085a-4f26-8718-0241c853f9dd]]
 extern crate genevo;
 extern crate rand;
-extern crate fixedbitset;
+// extern crate fixedbitset;
 #[macro_use] extern crate lazy_static;
 
 use genevo::prelude::*;
@@ -92,7 +92,7 @@ impl FitnessFunction<MagGenome, u32> for MagFitnessEvaluator {
 
         let energy = DATA[&key];
         let fitness = calc_fitness(energy);
-        println!("{:#?}", fitness);
+        println!("{} => {:#?}", key, fitness);
 
         fitness
     }
@@ -148,9 +148,7 @@ fn test_genevo_magcalc() {
                          best_solution.solution.fitness,
                          step.duration.fmt(),
                          step.processing_time.fmt());
-                // for row in best_solution.solution.genome.as_board() {
-                //     println!("      {:?}", row);
-                // }
+                println!("{:#?}", best_solution);
             },
             Ok(SimResult::Final(step, processing_time, duration, stop_reason)) => {
                 let best_solution = step.result.best_solution;
