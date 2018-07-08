@@ -56,7 +56,10 @@ fn get_symbols_from_pso_input(pso_result_file: &Path) -> Result<HashMap<String, 
     let txt = read_file(input_dat)?;
     let lines: Vec<_> = txt
         .lines()
-        .filter(|line| line.starts_with("NameOfAtoms") || line.starts_with("NumberOfAtoms"))
+        .filter(|line|
+                line.starts_with("NameOfAtoms") ||
+                line.starts_with("NumberOfAtoms") ||
+                line.starts_with("NumberOfFormula"))
         .take(2)
         .collect();
 
@@ -96,10 +99,16 @@ fn format_pso_opt_file<P: AsRef<Path>>(path: P) -> Result<String> {
     let names = &d["NameOfAtoms"];
 
     // total number of atoms
-    let natoms: usize = numbers
-        .iter()
-        .map(|v| v.parse::<usize>().expect("number of atoms"))
-        .sum();
+    let mut natoms = 0;
+    // read in data, get number of atoms in molecule
+    let txt = read_file(path)?;
+    if let Some(line) = txt.lines().skip(6).take(1).next() {
+        natoms = line.split_whitespace()
+            .map(|s| s.parse::<usize>().expect("number of atoms"))
+            .sum();
+    } else {
+        bail!("incomplete file: {}", path.display());
+    }
 
     // total number of line for one molecule
     let ntotal = if is_ini_file {
@@ -108,7 +117,6 @@ fn format_pso_opt_file<P: AsRef<Path>>(path: P) -> Result<String> {
         8 + natoms
     };
 
-    let txt = read_file(path)?;
     let mut all_lines = txt.lines();
 
     let mut parts = vec![];
@@ -136,6 +144,9 @@ fn format_pso_opt_file<P: AsRef<Path>>(path: P) -> Result<String> {
         let stream = lines.join("\n");
         parts.push(stream);
     }
+
+    // append a blank line
+    parts.push("\n".to_string());
 
     Ok(parts.join("\n"))
 }
