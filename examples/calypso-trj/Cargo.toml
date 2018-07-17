@@ -1,7 +1,7 @@
 # [[file:~/Workspace/Programming/structure-predication/spdkit/spdkit.note::37d406b3-d4b5-423d-aefc-8fc1a83944e9][37d406b3-d4b5-423d-aefc-8fc1a83944e9]]
 [package]
 name = "calypso-trj"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Wenping Guo <ybyygu@gmail.com>"]
 
 [dependencies]

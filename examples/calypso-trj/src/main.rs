@@ -102,7 +102,8 @@ fn format_pso_opt_file<P: AsRef<Path>>(path: P) -> Result<String> {
     let mut natoms = 0;
     // read in data, get number of atoms in molecule
     let txt = read_file(path)?;
-    if let Some(line) = txt.lines().skip(6).take(1).next() {
+    let nskip = if is_ini_file {5} else {6};
+    if let Some(line) = txt.lines().skip(nskip).take(1).next() {
         natoms = line.split_whitespace()
             .map(|s| s.parse::<usize>().expect("number of atoms"))
             .sum();
